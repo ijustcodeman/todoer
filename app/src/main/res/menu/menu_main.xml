@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_add"
+        android:title="Neues TODO"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_settings"
+        android:title="Einstellungen"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_sort_priority"
+        android:title="Sortieren nach Priorität"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_sort_date"
+        android:title="Sortieren nach Datum"
+        app:showAsAction="never" />
+
+</menu>

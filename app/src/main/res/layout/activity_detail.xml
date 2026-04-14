@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/details"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- TITEL -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Titel"
+        android:textStyle="bold"/>
+
+    <EditText
+        android:id="@+id/editTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:inputType="text"/>
+
+    <!-- BESCHREIBUNG -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Beschreibung"
+        android:textStyle="bold"
+        android:layout_marginTop="18dp"/>
+
+    <EditText
+        android:id="@+id/editDescription"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginTop="6dp"
+        android:inputType="textMultiLine"
+        android:gravity="top"/>
+
+    <!-- PRIORITÄT -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Priorität"
+        android:textStyle="bold"
+        android:layout_marginTop="18dp"/>
+
+    <Spinner
+        android:id="@+id/spinnerPriority"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"/>
+
+    <!-- SPEICHERN BUTTON -->
+    <Button
+        android:id="@+id/buttonSave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Speichern"
+        android:layout_marginTop="24dp"/>
+
+    <!-- LÖSCHEN BUTTON -->
+    <Button
+        android:id="@+id/buttonDelete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Löschen"
+        android:layout_marginTop="10dp"/>
+
+</LinearLayout>
