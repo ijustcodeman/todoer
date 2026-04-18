@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <Preference
+        android:layout="@layout/spacer"/>
+
+    <Preference
+        android:layout="@layout/spacer"/>
+
+    <Preference
+        android:layout="@layout/spacer"/>
 
     <ListPreference
-        app:key="font_size"
-        app:title="Schriftgröße"
-        app:summary="Wähle die Schriftgröße für die TODO-Einträge"
-        app:entries="@array/font_size_entries"
-        app:entryValues="@array/font_size_values"
-        app:defaultValue="medium" />
+        android:key="font_size"
+        android:title="Schriftgröße"
+        android:summary="Wähle die Schriftgröße"
+        android:entries="@array/font_size_name"
+        android:entryValues="@array/font_size_values"
+        android:defaultValue="16"/>
 
 </PreferenceScreen>
