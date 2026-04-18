@@ -1,8 +1,11 @@
 package com.example.todo.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,12 +14,20 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.todo.R;
+import com.example.todo.models.Todo;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.textfield.TextInputEditText;
 
 public class DetailActivity extends AppCompatActivity {
-
-    AutoCompleteTextView spinnerPriority;
     MaterialToolbar toolbar;
+    TextInputEditText editTitle;
+    TextInputEditText editDescription;
+    AutoCompleteTextView spinnerPriority;
+
+    Button save;
+    Button delete;
+
+    private String[] priorityItems = {"niedrig", "mittel", "hoch"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,19 +44,46 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void initializeVariables(){
+
+        toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle(R.string.details_name);
+
+        editTitle = findViewById(R.id.editTitle);
+        editDescription = findViewById(R.id.editDescription);
         spinnerPriority = findViewById(R.id.spinnerPriority);
 
-        String[] items = {"niedrig", "mittel", "hoch"};
+        save = findViewById(R.id.buttonSave);
+        delete = findViewById(R.id.buttonDelete);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
-                items
+                priorityItems
         );
 
         spinnerPriority.setAdapter(adapter);
 
-        toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle(R.string.details_name);
+        save.setOnClickListener(saveTodoListener);
     }
+
+    private View.OnClickListener saveTodoListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            String title = editTitle.getText() != null ? editTitle.getText().toString() : "";
+            String description = editDescription.getText() != null ? editDescription.getText().toString() : "";
+            String priority = spinnerPriority.getText() != null ? spinnerPriority.getText().toString() : "";
+
+            if (title.isEmpty() || description.isEmpty() || priority.isEmpty()) {
+                return;
+            }
+
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra("title", title);
+            resultIntent.putExtra("description", description);
+            resultIntent.putExtra("priority", priority);
+
+            setResult(RESULT_OK, resultIntent);
+            finish();
+        }
+    };
 }

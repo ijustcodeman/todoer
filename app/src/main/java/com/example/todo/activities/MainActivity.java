@@ -7,19 +7,31 @@ import android.view.MenuItem;
 import android.view.View;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.todo.R;
+import com.example.todo.adapters.TodoAdapter;
+import com.example.todo.models.Todo;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
     MaterialToolbar toolbar;
     FloatingActionButton fabAddTodo;
+
+    private TodoAdapter adapter;
+    RecyclerView recyclerView;
+
+    private static final int REQUEST_CODE_ADD_TODO = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +44,21 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
         initializeVariables();
+    }
+
+    private void initializeVariables(){
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setTitle(R.string.app_name);
+
+        fabAddTodo = findViewById(R.id.fabAddTodo);
+        fabAddTodo.setOnClickListener(addTodoListener);
+
+        adapter = new TodoAdapter(new ArrayList<>());
+
+        recyclerView = findViewById(R.id.recyclerViewTodos);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
     }
 
     // implement menu
@@ -52,28 +79,26 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    // apply font in main activity
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // applyFontSize();
-    }
-
-    private void initializeVariables(){
-        toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setTitle(R.string.app_name);
-
-        fabAddTodo = findViewById(R.id.fabAddTodo);
-        fabAddTodo.setOnClickListener(addTodoListener);
-    }
-
-    private View.OnClickListener addTodoListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-            startActivity(intent);
-        }
+    private View.OnClickListener addTodoListener = v -> {
+        Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+        startActivityForResult(intent, REQUEST_CODE_ADD_TODO);
     };
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_ADD_TODO && resultCode == RESULT_OK && data != null) {
+
+            String title = data.getStringExtra("title");
+            String description = data.getStringExtra("description");
+            String priority = data.getStringExtra("priority");
+
+            Todo todo = new Todo(title, description, priority);
+
+            adapter.addTodo(todo);
+        }
+    }
+
 }
 
