@@ -1,9 +1,8 @@
-package com.example.todo;
+package com.example.todo.activities;
 
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.Spinner;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,6 +10,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.todo.R;
 import com.google.android.material.appbar.MaterialToolbar;
 
 public class DetailActivity extends AppCompatActivity {

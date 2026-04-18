@@ -1,8 +1,10 @@
-package com.example.todo;
+package com.example.todo.fragments;
 
 import android.os.Bundle;
 
 import androidx.preference.PreferenceFragmentCompat;
+
+import com.example.todo.R;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 
