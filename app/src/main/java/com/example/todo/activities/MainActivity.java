@@ -7,6 +7,8 @@ import android.view.MenuItem;
 import android.view.View;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -65,6 +67,24 @@ public class MainActivity extends AppCompatActivity {
         enableSwipeToDelete();
     }
 
+    private ActivityResultLauncher<Intent> addTodoLauncher =
+            registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+
+                            Intent data = result.getData();
+
+                            String title = data.getStringExtra("title");
+                            String description = data.getStringExtra("description");
+                            String priority = data.getStringExtra("priority");
+
+                            Todo todo = new Todo(title, description, priority);
+                            adapter.addTodo(todo);
+                        }
+                    }
+            );
+
     // implement menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -85,24 +105,8 @@ public class MainActivity extends AppCompatActivity {
 
     private View.OnClickListener addTodoListener = v -> {
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-        startActivityForResult(intent, REQUEST_CODE_ADD_TODO);
+        addTodoLauncher.launch(intent);
     };
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_CODE_ADD_TODO && resultCode == RESULT_OK && data != null) {
-
-            String title = data.getStringExtra("title");
-            String description = data.getStringExtra("description");
-            String priority = data.getStringExtra("priority");
-
-            Todo todo = new Todo(title, description, priority);
-
-            adapter.addTodo(todo);
-        }
-    }
 
     private void enableSwipeToDelete() {
 
