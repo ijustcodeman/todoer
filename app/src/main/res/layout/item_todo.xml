@@ -14,7 +14,6 @@
         android:orientation="vertical"
         android:padding="12dp">
 
-        <!-- Titel -->
         <TextView
             android:id="@+id/textTitle"
             android:layout_width="match_parent"
@@ -23,7 +22,6 @@
             android:textStyle="bold"
             android:textSize="16sp"/>
 
-        <!-- Beschreibung (kurz) -->
         <TextView
             android:id="@+id/textDescription"
             android:layout_width="match_parent"
@@ -32,7 +30,6 @@
             android:textSize="14sp"
             android:maxLines="2"/>
 
-        <!-- Meta Infos -->
         <TextView
             android:id="@+id/textMeta"
             android:layout_width="match_parent"

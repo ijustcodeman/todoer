@@ -67,4 +67,9 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
         todoList.add(todo);
         notifyItemInserted(todoList.size() - 1);
     }
+
+    public void removeTodo(int position){
+        todoList.remove(position);
+        notifyItemRemoved(position);
+    }
 }

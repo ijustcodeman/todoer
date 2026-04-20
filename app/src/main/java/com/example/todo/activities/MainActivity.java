@@ -8,10 +8,12 @@ import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -59,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerViewTodos);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
+
+        enableSwipeToDelete();
     }
 
     // implement menu
@@ -98,6 +102,45 @@ public class MainActivity extends AppCompatActivity {
 
             adapter.addTodo(todo);
         }
+    }
+
+    private void enableSwipeToDelete() {
+
+        ItemTouchHelper.SimpleCallback swipeCallback =
+                new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+
+                    @Override
+                    public boolean onMove(RecyclerView recyclerView,
+                                          RecyclerView.ViewHolder viewHolder,
+                                          RecyclerView.ViewHolder target) {
+                        return false;
+                    }
+
+                    @Override
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+
+                        int position = viewHolder.getBindingAdapterPosition();
+
+                        if (position == RecyclerView.NO_POSITION) {
+                            return;
+                        }
+
+                        adapter.notifyItemChanged(position);
+
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("Löschen")
+                                .setMessage("Möchtest du dieses TODO wirklich löschen?")
+                                .setPositiveButton("Ja", (dialog, which) -> {
+                                    adapter.removeTodo(position);
+                                })
+                                .setNegativeButton("Nein", (dialog, which) -> {
+                                    dialog.dismiss();
+                                })
+                                .show();
+                    }
+                };
+
+        new ItemTouchHelper(swipeCallback).attachToRecyclerView(recyclerView);
     }
 
 }
