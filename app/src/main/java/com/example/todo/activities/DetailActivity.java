@@ -14,7 +14,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.todo.R;
-import com.example.todo.models.Todo;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -25,7 +24,7 @@ public class DetailActivity extends AppCompatActivity {
     AutoCompleteTextView spinnerPriority;
 
     Button save;
-    Button delete;
+    Button cancel;
 
     private String[] priorityItems = {"niedrig", "mittel", "hoch"};
 
@@ -53,7 +52,7 @@ public class DetailActivity extends AppCompatActivity {
         spinnerPriority = findViewById(R.id.spinnerPriority);
 
         save = findViewById(R.id.buttonSave);
-        delete = findViewById(R.id.buttonDelete);
+        cancel = findViewById(R.id.buttonCancel);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
@@ -64,6 +63,7 @@ public class DetailActivity extends AppCompatActivity {
         spinnerPriority.setAdapter(adapter);
 
         save.setOnClickListener(saveTodoListener);
+        cancel.setOnClickListener(cancelListener);
     }
 
     private View.OnClickListener saveTodoListener = new View.OnClickListener() {
@@ -86,4 +86,6 @@ public class DetailActivity extends AppCompatActivity {
             finish();
         }
     };
+
+    private View.OnClickListener cancelListener = v -> finish();
 }

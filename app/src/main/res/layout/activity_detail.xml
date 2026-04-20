@@ -75,10 +75,10 @@
             android:layout_marginTop="24dp" />
 
         <Button
-            android:id="@+id/buttonDelete"
+            android:id="@+id/buttonCancel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Löschen"
+            android:text="Abbrechen"
             android:layout_marginTop="10dp" />
 
     </LinearLayout>
