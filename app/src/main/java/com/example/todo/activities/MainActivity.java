@@ -36,8 +36,6 @@ public class MainActivity extends AppCompatActivity {
     private TodoAdapter adapter;
     RecyclerView recyclerView;
 
-    private static final int REQUEST_CODE_ADD_TODO = 1;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,27 +72,20 @@ public class MainActivity extends AppCompatActivity {
                     new ActivityResultContracts.StartActivityForResult(),
                     result -> {
                         if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-
-                            Intent data = result.getData();
-
-                            String title = data.getStringExtra("title");
-                            String description = data.getStringExtra("description");
-                            String priority = data.getStringExtra("priority");
-
-                            Todo todo = new Todo(title, description, priority);
-                            adapter.addTodo(todo);
+                            Todo todo = (Todo) result.getData().getSerializableExtra("todo");
+                            if (todo != null) {
+                                adapter.addTodo(todo);
+                            }
                         }
                     }
             );
 
-    // implement menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return true;
     }
 
-    // implement menu
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_settings) {
@@ -111,10 +102,8 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void enableSwipeToDelete() {
-
         ItemTouchHelper.SimpleCallback swipeCallback =
                 new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-
                     @Override
                     public boolean onMove(RecyclerView recyclerView,
                                           RecyclerView.ViewHolder viewHolder,
@@ -124,15 +113,11 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-
                         int position = viewHolder.getBindingAdapterPosition();
-
                         if (position == RecyclerView.NO_POSITION) {
                             return;
                         }
-
                         adapter.notifyItemChanged(position);
-
                         new AlertDialog.Builder(MainActivity.this)
                                 .setTitle("Löschen")
                                 .setMessage("Möchtest du dieses TODO wirklich löschen?")
@@ -145,9 +130,6 @@ public class MainActivity extends AppCompatActivity {
                                 .show();
                     }
                 };
-
         new ItemTouchHelper(swipeCallback).attachToRecyclerView(recyclerView);
     }
-
 }
-
