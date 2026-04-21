@@ -4,12 +4,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -22,11 +20,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.todo.R;
 import com.example.todo.adapters.TodoAdapter;
+import com.example.todo.data.AppDatabase;
 import com.example.todo.models.Todo;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TodoAdapter adapter;
     RecyclerView recyclerView;
+    private AppDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         setContentView(R.layout.activity_main);
+        
+        db = AppDatabase.getInstance(this);
+        
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -50,13 +54,31 @@ public class MainActivity extends AppCompatActivity {
         initializeVariables();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadTodos();
+    }
+
+    private void loadTodos() {
+        List<Todo> todos = db.todoDao().getAllTodos();
+        // Wir müssen für jedes Todo auch die Kategorien laden
+        for (Todo todo : todos) {
+            todo.setCategories(db.todoDao().getCategoriesForTodo(todo.getId()));
+        }
+        adapter.setTodoList(new ArrayList<>(todos));
+    }
+
     private void initializeVariables(){
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitle(R.string.app_name);
 
         fabAddTodo = findViewById(R.id.fabAddTodo);
-        fabAddTodo.setOnClickListener(addTodoListener);
+        fabAddTodo.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+            addTodoLauncher.launch(intent);
+        });
 
         adapter = new TodoAdapter(new ArrayList<>());
 
@@ -71,12 +93,8 @@ public class MainActivity extends AppCompatActivity {
             registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
                     result -> {
-                        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                            Todo todo = (Todo) result.getData().getSerializableExtra("todo");
-                            if (todo != null) {
-                                adapter.addTodo(todo);
-                            }
-                        }
+                        // Da wir in DetailActivity direkt in die DB speichern, 
+                        // laden wir in onResume einfach alles neu.
                     }
             );
 
@@ -96,11 +114,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private View.OnClickListener addTodoListener = v -> {
-        Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-        addTodoLauncher.launch(intent);
-    };
-
     private void enableSwipeToDelete() {
         ItemTouchHelper.SimpleCallback swipeCallback =
                 new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -117,15 +130,18 @@ public class MainActivity extends AppCompatActivity {
                         if (position == RecyclerView.NO_POSITION) {
                             return;
                         }
-                        adapter.notifyItemChanged(position);
+                        
+                        Todo todoToDelete = adapter.getTodoAt(position);
+                        
                         new AlertDialog.Builder(MainActivity.this)
                                 .setTitle("Löschen")
                                 .setMessage("Möchtest du dieses TODO wirklich löschen?")
                                 .setPositiveButton("Ja", (dialog, which) -> {
-                                    adapter.removeTodo(position);
+                                    db.todoDao().delete(todoToDelete);
+                                    loadTodos();
                                 })
                                 .setNegativeButton("Nein", (dialog, which) -> {
-                                    dialog.dismiss();
+                                    adapter.notifyItemChanged(position);
                                 })
                                 .show();
                     }

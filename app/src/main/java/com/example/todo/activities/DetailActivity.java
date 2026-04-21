@@ -1,12 +1,12 @@
 package com.example.todo.activities;
 
 import android.app.DatePickerDialog;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
@@ -17,8 +17,11 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.todo.R;
+import com.example.todo.data.AppDatabase;
 import com.example.todo.models.Category;
+import com.example.todo.models.Priority;
 import com.example.todo.models.Todo;
+import com.example.todo.models.TodoCategoryJoin;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -27,6 +30,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DetailActivity extends AppCompatActivity {
     MaterialToolbar toolbar;
@@ -40,9 +44,11 @@ public class DetailActivity extends AppCompatActivity {
     Button save;
     Button cancel;
 
-    private List<String> priorityItems = new ArrayList<>();
+    private List<Priority> availablePriorities = new ArrayList<>();
     private List<Category> selectedCategories = new ArrayList<>();
     private List<Category> allAvailableCategories = new ArrayList<>();
+    
+    private AppDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,25 +56,37 @@ public class DetailActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         setContentView(R.layout.activity_detail);
+        
+        db = AppDatabase.getInstance(this);
+        
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        loadMockData();
+        ensureInitialData();
+        loadDataFromDb();
         initializeVariables();
     }
 
-    private void loadMockData() {
-        // In einer echten App kämen diese Daten aus einer DB oder SharedPreferences
-        priorityItems.add("niedrig");
-        priorityItems.add("mittel");
-        priorityItems.add("hoch");
+    private void ensureInitialData() {
+        // Falls die DB leer ist (erster Start), fügen wir Standardwerte ein
+        if (db.priorityDao().getAllPriorities().isEmpty()) {
+            db.priorityDao().insert(new Priority("niedrig"));
+            db.priorityDao().insert(new Priority("mittel"));
+            db.priorityDao().insert(new Priority("hoch"));
+        }
+        if (db.categoryDao().getAllCategories().isEmpty()) {
+            db.categoryDao().insert(new Category("Arbeit", android.R.drawable.ic_menu_my_calendar));
+            db.categoryDao().insert(new Category("Privat", android.R.drawable.ic_lock_idle_lock));
+            db.categoryDao().insert(new Category("Einkauf", android.R.drawable.ic_menu_add));
+        }
+    }
 
-        allAvailableCategories.add(new Category("1", "Arbeit", android.R.drawable.ic_menu_my_calendar));
-        allAvailableCategories.add(new Category("2", "Privat", android.R.drawable.ic_lock_idle_lock));
-        allAvailableCategories.add(new Category("3", "Einkauf", android.R.drawable.ic_menu_add));
+    private void loadDataFromDb() {
+        availablePriorities = db.priorityDao().getAllPriorities();
+        allAvailableCategories = db.categoryDao().getAllCategories();
     }
 
     private void initializeVariables(){
@@ -88,10 +106,14 @@ public class DetailActivity extends AppCompatActivity {
         save = findViewById(R.id.buttonSave);
         cancel = findViewById(R.id.buttonCancel);
 
+        List<String> priorityNames = availablePriorities.stream()
+                .map(Priority::getName)
+                .collect(Collectors.toList());
+
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
-                priorityItems
+                priorityNames
         );
 
         spinnerPriority.setAdapter(adapter);
@@ -115,23 +137,35 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void showCategorySelectionDialog() {
+        if (allAvailableCategories.isEmpty()) {
+            Toast.makeText(this, "Keine Kategorien vorhanden", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String[] categoryNames = new String[allAvailableCategories.size()];
         boolean[] checkedItems = new boolean[allAvailableCategories.size()];
 
         for (int i = 0; i < allAvailableCategories.size(); i++) {
             categoryNames[i] = allAvailableCategories.get(i).getName();
-            checkedItems[i] = selectedCategories.contains(allAvailableCategories.get(i));
+            // Check based on ID or Name
+            for (Category selected : selectedCategories) {
+                if (selected.getId() == allAvailableCategories.get(i).getId()) {
+                    checkedItems[i] = true;
+                    break;
+                }
+            }
         }
 
         new AlertDialog.Builder(this)
                 .setTitle("Kategorien wählen")
                 .setMultiChoiceItems(categoryNames, checkedItems, (dialog, which, isChecked) -> {
+                    Category category = allAvailableCategories.get(which);
                     if (isChecked) {
-                        if (!selectedCategories.contains(allAvailableCategories.get(which))) {
-                            selectedCategories.add(allAvailableCategories.get(which));
+                        if (!selectedCategories.stream().anyMatch(c -> c.getId() == category.getId())) {
+                            selectedCategories.add(category);
                         }
                     } else {
-                        selectedCategories.remove(allAvailableCategories.get(which));
+                        selectedCategories.removeIf(c -> c.getId() == category.getId());
                     }
                 })
                 .setPositiveButton("OK", (dialog, which) -> updateCategoryChips())
@@ -147,7 +181,7 @@ public class DetailActivity extends AppCompatActivity {
             chip.setChipIconResource(category.getIconResId());
             chip.setCloseIconVisible(true);
             chip.setOnCloseIconClickListener(v -> {
-                selectedCategories.remove(category);
+                selectedCategories.removeIf(c -> c.getId() == category.getId());
                 updateCategoryChips();
             });
             chipGroupCategories.addView(chip);
@@ -163,15 +197,17 @@ public class DetailActivity extends AppCompatActivity {
             String dueDate = editDueDate.getText() != null ? editDueDate.getText().toString() : "";
 
             if (title.isEmpty() || priority.isEmpty()) {
+                Toast.makeText(DetailActivity.this, "Titel und Priorität sind Pflichtfelder", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            Todo todo = new Todo(title, description, priority, dueDate, new ArrayList<>(selectedCategories));
+            Todo todo = new Todo(title, description, priority, dueDate);
+            long todoId = db.todoDao().insert(todo);
 
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra("todo", todo);
+            for (Category category : selectedCategories) {
+                db.todoDao().insertTodoCategoryJoin(new TodoCategoryJoin((int) todoId, category.getId()));
+            }
 
-            setResult(RESULT_OK, resultIntent);
             finish();
         }
     };

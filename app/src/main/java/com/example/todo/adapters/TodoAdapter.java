@@ -24,6 +24,15 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
         this.todoList = todoList;
     }
 
+    public void setTodoList(ArrayList<Todo> todoList) {
+        this.todoList = todoList;
+        notifyDataSetChanged();
+    }
+
+    public Todo getTodoAt(int position) {
+        return todoList.get(position);
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView title, description, meta;
         LinearLayout layoutIcons;

@@ -4,24 +4,20 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import java.io.Serializable;
 
-@Entity(tableName = "categories")
-public class Category implements Serializable {
+@Entity(tableName = "priorities")
+public class Priority implements Serializable {
     @PrimaryKey(autoGenerate = true)
     private int id;
     private String name;
-    private int iconResId;
 
-    public Category(String name, int iconResId) {
+    public Priority(String name) {
         this.name = name;
-        this.iconResId = iconResId;
     }
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    public int getIconResId() { return iconResId; }
-    public void setIconResId(int iconResId) { this.iconResId = iconResId; }
 
     @Override
     public String toString() {

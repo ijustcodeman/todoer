@@ -1,16 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-
-    <Preference
-        android:layout="@layout/spacer"/>
-
-    <Preference
-        android:layout="@layout/spacer"/>
-
-    <Preference
-        android:layout="@layout/spacer"/>
-
     <ListPreference
         android:key="font_size"
         android:title="Schriftgröße"
@@ -18,5 +8,15 @@
         android:entries="@array/font_size_name"
         android:entryValues="@array/font_size_values"
         android:defaultValue="16"/>
+
+    <Preference
+        android:key="manage_categories"
+        android:title="Kategorien verwalten"
+        android:summary="Kategorien erstellen, bearbeiten oder löschen"/>
+
+    <Preference
+        android:key="manage_priorities"
+        android:title="Prioritäten verwalten"
+        android:summary="Prioritäten erstellen, bearbeiten oder löschen"/>
 
 </PreferenceScreen>
