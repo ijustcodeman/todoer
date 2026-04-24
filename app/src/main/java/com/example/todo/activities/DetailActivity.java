@@ -92,8 +92,15 @@ public class DetailActivity extends AppCompatActivity {
             editTitle.setText(editingTodo.getTitle());
             editDescription.setText(editingTodo.getDescription());
             editDueDate.setText(editingTodo.getDueDate());
-            spinnerPriority.setText(editingTodo.getPriority(), false);
             switchCompleted.setChecked(editingTodo.isCompleted());
+            
+            // Finde den Namen der Priorität anhand der ID
+            Priority p = db.priorityDao().getAllPriorities().stream()
+                    .filter(priority -> priority.getId() == editingTodo.getPriorityId())
+                    .findFirst().orElse(null);
+            if (p != null) {
+                spinnerPriority.setText(p.getName(), false);
+            }
             
             selectedCategories = db.todoDao().getCategoriesForTodo(editingTodoId);
             updateCategoryChips();
@@ -223,17 +230,24 @@ public class DetailActivity extends AppCompatActivity {
         public void onClick(View v) {
             String title = editTitle.getText() != null ? editTitle.getText().toString() : "";
             String description = editDescription.getText() != null ? editDescription.getText().toString() : "";
-            String priority = spinnerPriority.getText() != null ? spinnerPriority.getText().toString() : "";
+            String selectedPriorityName = spinnerPriority.getText() != null ? spinnerPriority.getText().toString() : "";
             String dueDate = editDueDate.getText() != null ? editDueDate.getText().toString() : "";
             boolean isCompleted = switchCompleted.isChecked();
 
-            if (title.isEmpty() || priority.isEmpty()) {
+            if (title.isEmpty() || selectedPriorityName.isEmpty()) {
                 Toast.makeText(DetailActivity.this, "Titel und Priorität sind Pflichtfelder", Toast.LENGTH_SHORT).show();
                 return;
             }
 
+            // Finde die ID der gewählten Priorität
+            Priority p = availablePriorities.stream()
+                    .filter(priority -> priority.getName().equals(selectedPriorityName))
+                    .findFirst().orElse(null);
+            
+            if (p == null) return;
+
             if (editingTodoId == -1) {
-                Todo todo = new Todo(title, description, priority, dueDate, isCompleted);
+                Todo todo = new Todo(title, description, p.getId(), dueDate, isCompleted);
                 long todoId = db.todoDao().insert(todo);
                 for (Category category : selectedCategories) {
                     db.todoDao().insertTodoCategoryJoin(new TodoCategoryJoin((int) todoId, category.getId()));
@@ -241,7 +255,7 @@ public class DetailActivity extends AppCompatActivity {
             } else {
                 editingTodo.setTitle(title);
                 editingTodo.setDescription(description);
-                editingTodo.setPriority(priority);
+                editingTodo.setPriorityId(p.getId());
                 editingTodo.setDueDate(dueDate);
                 editingTodo.setCompleted(isCompleted);
                 db.todoDao().update(editingTodo);

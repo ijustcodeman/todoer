@@ -38,4 +38,7 @@ public interface TodoDao {
 
     @Query("DELETE FROM todo_category_join WHERE todoId = :todoId")
     void deleteCategoriesForTodo(int todoId);
+
+    @Query("SELECT COUNT(*) FROM todos WHERE priorityId = :priorityId")
+    int getTodoCountByPriority(int priorityId);
 }

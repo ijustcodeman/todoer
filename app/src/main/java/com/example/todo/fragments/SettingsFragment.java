@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
@@ -160,7 +161,16 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         if (priority != null) {
             builder.setNeutralButton("Löschen", (dialog, which) -> {
-                db.priorityDao().delete(priority);
+                // PRÜFUNG: Wird diese Priorität noch von ToDos verwendet?
+                int count = db.todoDao().getTodoCountByPriority(priority.getId());
+                if (count > 0) {
+                    Toast.makeText(requireContext(), 
+                        "Löschen nicht möglich: Diese Priorität wird von " + count + " ToDos verwendet.", 
+                        Toast.LENGTH_LONG).show();
+                } else {
+                    db.priorityDao().delete(priority);
+                    Toast.makeText(requireContext(), "Priorität gelöscht.", Toast.LENGTH_SHORT).show();
+                }
             });
         }
 

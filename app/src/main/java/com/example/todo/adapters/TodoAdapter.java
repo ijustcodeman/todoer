@@ -70,7 +70,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
         holder.title.setText(todo.getTitle());
         holder.description.setText(todo.getDescription());
         
-        String metaText = todo.getPriority();
+        String metaText = todo.getPriorityName();
         if (todo.getDueDate() != null && !todo.getDueDate().isEmpty()) {
             metaText += " | " + todo.getDueDate();
         }
@@ -89,9 +89,6 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
         }
 
         // Visuelles Feedback für erledigte ToDos
-        // Wir setzen die Alpha auf das INNERE Layout (contentLayout), NICHT auf das itemView.
-        // Das itemView wird vom ItemTouchHelper (Swipe) kontrolliert und beim Abbrechen auf 1.0 gesetzt.
-        // Unser inneres Layout bleibt davon unberührt.
         if (todo.isCompleted()) {
             holder.title.setPaintFlags(holder.title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             holder.contentLayout.setAlpha(0.5f);

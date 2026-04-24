@@ -11,7 +11,7 @@ import com.example.todo.models.Priority;
 import com.example.todo.models.Todo;
 import com.example.todo.models.TodoCategoryJoin;
 
-@Database(entities = {Todo.class, Category.class, Priority.class, TodoCategoryJoin.class}, version = 3)
+@Database(entities = {Todo.class, Category.class, Priority.class, TodoCategoryJoin.class}, version = 4)
 public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase instance;
 

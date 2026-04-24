@@ -2,10 +2,9 @@ package com.example.todo.models;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
-import java.io.Serializable;
 
 @Entity(tableName = "categories")
-public class Category implements Serializable {
+public class Category {
     @PrimaryKey(autoGenerate = true)
     private int id;
     private String name;

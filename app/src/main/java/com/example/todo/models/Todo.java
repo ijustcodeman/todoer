@@ -1,28 +1,40 @@
 package com.example.todo.models;
 
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
 import androidx.room.Ignore;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
-import java.io.Serializable;
 import java.util.List;
 
-@Entity(tableName = "todos")
-public class Todo implements Serializable {
+@Entity(tableName = "todos",
+        foreignKeys = @ForeignKey(entity = Priority.class,
+                parentColumns = "id",
+                childColumns = "priorityId",
+                onDelete = ForeignKey.SET_DEFAULT),
+        indices = {@Index("priorityId")})
+public class Todo {
     @PrimaryKey(autoGenerate = true)
     private int id;
     private String title;
     private String description;
-    private String priority;
+    private int priorityId;
     private String dueDate;
     private boolean isCompleted;
     
     @Ignore
     private List<Category> categories;
+    
+    @Ignore
+    private String priorityName;
 
-    public Todo(String title, String description, String priority, String dueDate, boolean isCompleted) {
+    @Ignore
+    private int priorityRank;
+
+    public Todo(String title, String description, int priorityId, String dueDate, boolean isCompleted) {
         this.title = title;
         this.description = description;
-        this.priority = priority;
+        this.priorityId = priorityId;
         this.dueDate = dueDate;
         this.isCompleted = isCompleted;
     }
@@ -33,8 +45,8 @@ public class Todo implements Serializable {
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    public String getPriority() { return priority; }
-    public void setPriority(String priority) { this.priority = priority; }
+    public int getPriorityId() { return priorityId; }
+    public void setPriorityId(int priorityId) { this.priorityId = priorityId; }
     public String getDueDate() { return dueDate; }
     public void setDueDate(String dueDate) { this.dueDate = dueDate; }
     public boolean isCompleted() { return isCompleted; }
@@ -42,4 +54,10 @@ public class Todo implements Serializable {
 
     public List<Category> getCategories() { return categories; }
     public void setCategories(List<Category> categories) { this.categories = categories; }
+
+    public String getPriorityName() { return priorityName; }
+    public void setPriorityName(String priorityName) { this.priorityName = priorityName; }
+
+    public int getPriorityRank() { return priorityRank; }
+    public void setPriorityRank(int priorityRank) { this.priorityRank = priorityRank; }
 }
