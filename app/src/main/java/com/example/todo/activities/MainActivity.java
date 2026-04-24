@@ -28,7 +28,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTodoClickListener {
 
     MaterialToolbar toolbar;
     FloatingActionButton fabAddTodo;
@@ -62,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadTodos() {
         List<Todo> todos = db.todoDao().getAllTodos();
-        // Wir müssen für jedes Todo auch die Kategorien laden
         for (Todo todo : todos) {
             todo.setCategories(db.todoDao().getCategoriesForTodo(todo.getId()));
         }
@@ -80,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
             addTodoLauncher.launch(intent);
         });
 
-        adapter = new TodoAdapter(new ArrayList<>());
+        adapter = new TodoAdapter(new ArrayList<>(), this);
 
         recyclerView = findViewById(R.id.recyclerViewTodos);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -89,12 +88,18 @@ public class MainActivity extends AppCompatActivity {
         enableSwipeToDelete();
     }
 
+    @Override
+    public void onTodoClick(Todo todo) {
+        Intent intent = new Intent(this, DetailActivity.class);
+        intent.putExtra("todo_id", todo.getId());
+        addTodoLauncher.launch(intent);
+    }
+
     private ActivityResultLauncher<Intent> addTodoLauncher =
             registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
                     result -> {
-                        // Da wir in DetailActivity direkt in die DB speichern, 
-                        // laden wir in onResume einfach alles neu.
+                        // Refresh in onResume
                     }
             );
 
@@ -141,6 +146,9 @@ public class MainActivity extends AppCompatActivity {
                                     loadTodos();
                                 })
                                 .setNegativeButton("Nein", (dialog, which) -> {
+                                    adapter.notifyItemChanged(position);
+                                })
+                                .setOnCancelListener(dialog -> {
                                     adapter.notifyItemChanged(position);
                                 })
                                 .show();

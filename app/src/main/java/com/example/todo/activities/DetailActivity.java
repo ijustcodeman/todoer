@@ -25,6 +25,7 @@ import com.example.todo.models.TodoCategoryJoin;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ public class DetailActivity extends AppCompatActivity {
     TextInputEditText editDescription;
     TextInputEditText editDueDate;
     AutoCompleteTextView spinnerPriority;
+    SwitchMaterial switchCompleted;
     ChipGroup chipGroupCategories;
     Button buttonAddCategory;
 
@@ -49,6 +51,8 @@ public class DetailActivity extends AppCompatActivity {
     private List<Category> allAvailableCategories = new ArrayList<>();
     
     private AppDatabase db;
+    private int editingTodoId = -1;
+    private Todo editingTodo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +62,7 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
         
         db = AppDatabase.getInstance(this);
+        editingTodoId = getIntent().getIntExtra("todo_id", -1);
         
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -68,14 +73,39 @@ public class DetailActivity extends AppCompatActivity {
         ensureInitialData();
         loadDataFromDb();
         initializeVariables();
+        
+        if (editingTodoId != -1) {
+            loadExistingTodo();
+        }
+    }
+
+    private void loadExistingTodo() {
+        List<Todo> allTodos = db.todoDao().getAllTodos();
+        for (Todo t : allTodos) {
+            if (t.getId() == editingTodoId) {
+                editingTodo = t;
+                break;
+            }
+        }
+        
+        if (editingTodo != null) {
+            editTitle.setText(editingTodo.getTitle());
+            editDescription.setText(editingTodo.getDescription());
+            editDueDate.setText(editingTodo.getDueDate());
+            spinnerPriority.setText(editingTodo.getPriority(), false);
+            switchCompleted.setChecked(editingTodo.isCompleted());
+            
+            selectedCategories = db.todoDao().getCategoriesForTodo(editingTodoId);
+            updateCategoryChips();
+            toolbar.setTitle("Bearbeiten");
+        }
     }
 
     private void ensureInitialData() {
-        // Falls die DB leer ist (erster Start), fügen wir Standardwerte ein
         if (db.priorityDao().getAllPriorities().isEmpty()) {
-            db.priorityDao().insert(new Priority("niedrig"));
-            db.priorityDao().insert(new Priority("mittel"));
-            db.priorityDao().insert(new Priority("hoch"));
+            db.priorityDao().insert(new Priority("niedrig", 1));
+            db.priorityDao().insert(new Priority("mittel", 2));
+            db.priorityDao().insert(new Priority("hoch", 3));
         }
         if (db.categoryDao().getAllCategories().isEmpty()) {
             db.categoryDao().insert(new Category("Arbeit", android.R.drawable.ic_menu_my_calendar));
@@ -97,6 +127,7 @@ public class DetailActivity extends AppCompatActivity {
         editDescription = findViewById(R.id.editDescription);
         editDueDate = findViewById(R.id.editDueDate);
         spinnerPriority = findViewById(R.id.spinnerPriority);
+        switchCompleted = findViewById(R.id.switchCompleted);
         chipGroupCategories = findViewById(R.id.chipGroupCategories);
         buttonAddCategory = findViewById(R.id.buttonAddCategory);
 
@@ -147,7 +178,6 @@ public class DetailActivity extends AppCompatActivity {
 
         for (int i = 0; i < allAvailableCategories.size(); i++) {
             categoryNames[i] = allAvailableCategories.get(i).getName();
-            // Check based on ID or Name
             for (Category selected : selectedCategories) {
                 if (selected.getId() == allAvailableCategories.get(i).getId()) {
                     checkedItems[i] = true;
@@ -195,17 +225,31 @@ public class DetailActivity extends AppCompatActivity {
             String description = editDescription.getText() != null ? editDescription.getText().toString() : "";
             String priority = spinnerPriority.getText() != null ? spinnerPriority.getText().toString() : "";
             String dueDate = editDueDate.getText() != null ? editDueDate.getText().toString() : "";
+            boolean isCompleted = switchCompleted.isChecked();
 
             if (title.isEmpty() || priority.isEmpty()) {
                 Toast.makeText(DetailActivity.this, "Titel und Priorität sind Pflichtfelder", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            Todo todo = new Todo(title, description, priority, dueDate);
-            long todoId = db.todoDao().insert(todo);
-
-            for (Category category : selectedCategories) {
-                db.todoDao().insertTodoCategoryJoin(new TodoCategoryJoin((int) todoId, category.getId()));
+            if (editingTodoId == -1) {
+                Todo todo = new Todo(title, description, priority, dueDate, isCompleted);
+                long todoId = db.todoDao().insert(todo);
+                for (Category category : selectedCategories) {
+                    db.todoDao().insertTodoCategoryJoin(new TodoCategoryJoin((int) todoId, category.getId()));
+                }
+            } else {
+                editingTodo.setTitle(title);
+                editingTodo.setDescription(description);
+                editingTodo.setPriority(priority);
+                editingTodo.setDueDate(dueDate);
+                editingTodo.setCompleted(isCompleted);
+                db.todoDao().update(editingTodo);
+                
+                db.todoDao().deleteCategoriesForTodo(editingTodoId);
+                for (Category category : selectedCategories) {
+                    db.todoDao().insertTodoCategoryJoin(new TodoCategoryJoin(editingTodoId, category.getId()));
+                }
             }
 
             finish();

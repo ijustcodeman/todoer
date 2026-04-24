@@ -11,7 +11,7 @@ import com.example.todo.models.Priority;
 import com.example.todo.models.Todo;
 import com.example.todo.models.TodoCategoryJoin;
 
-@Database(entities = {Todo.class, Category.class, Priority.class, TodoCategoryJoin.class}, version = 1)
+@Database(entities = {Todo.class, Category.class, Priority.class, TodoCategoryJoin.class}, version = 3)
 public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase instance;
 
@@ -24,7 +24,7 @@ public abstract class AppDatabase extends RoomDatabase {
             instance = Room.databaseBuilder(context.getApplicationContext(),
                     AppDatabase.class, "todo_database")
                     .fallbackToDestructiveMigration()
-                    .allowMainThreadQueries() // Nur für dieses Beispiel, in Prod Threads nutzen!
+                    .allowMainThreadQueries()
                     .build();
         }
         return instance;

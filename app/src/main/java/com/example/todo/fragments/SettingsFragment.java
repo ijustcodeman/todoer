@@ -16,6 +16,7 @@ import com.example.todo.data.AppDatabase;
 import com.example.todo.models.Category;
 import com.example.todo.models.Priority;
 
+import java.util.Comparator;
 import java.util.List;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
@@ -117,7 +118,8 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
     private void showManagePrioritiesDialog() {
         List<Priority> priorities = db.priorityDao().getAllPriorities();
-        String[] names = priorities.stream().map(Priority::getName).toArray(String[]::new);
+        priorities.sort(Comparator.comparingInt(Priority::getRank).reversed());
+        String[] names = priorities.stream().map(p -> p.getName() + " (Rang: " + p.getRank() + ")").toArray(String[]::new);
 
         new AlertDialog.Builder(requireContext())
                 .setTitle("Prioritäten verwalten")
@@ -128,18 +130,30 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     }
 
     private void showEditPriorityDialog(Priority priority) {
-        EditText editName = new EditText(requireContext());
-        if (priority != null) editName.setText(priority.getName());
+        View layout = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_priority, null);
+        EditText editName = layout.findViewById(R.id.editPriorityName);
+        EditText editRank = layout.findViewById(R.id.editPriorityRank);
+
+        if (priority != null) {
+            editName.setText(priority.getName());
+            editRank.setText(String.valueOf(priority.getRank()));
+        }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext())
                 .setTitle(priority == null ? "Neue Priorität" : "Priorität bearbeiten")
-                .setView(editName)
+                .setView(layout)
                 .setPositiveButton("Speichern", (dialog, which) -> {
                     String name = editName.getText().toString();
+                    int rank = 0;
+                    try {
+                        rank = Integer.parseInt(editRank.getText().toString());
+                    } catch (NumberFormatException ignored) {}
+
                     if (priority == null) {
-                        db.priorityDao().insert(new Priority(name));
+                        db.priorityDao().insert(new Priority(name, rank));
                     } else {
                         priority.setName(name);
+                        priority.setRank(rank);
                         db.priorityDao().update(priority);
                     }
                 });

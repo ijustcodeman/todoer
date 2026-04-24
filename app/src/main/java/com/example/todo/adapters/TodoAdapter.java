@@ -1,5 +1,6 @@
 package com.example.todo.adapters;
 
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,9 +20,15 @@ import java.util.ArrayList;
 public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
 
     private ArrayList<Todo> todoList;
+    private OnTodoClickListener listener;
 
-    public TodoAdapter(ArrayList<Todo> todoList) {
+    public interface OnTodoClickListener {
+        void onTodoClick(Todo todo);
+    }
+
+    public TodoAdapter(ArrayList<Todo> todoList, OnTodoClickListener listener) {
         this.todoList = todoList;
+        this.listener = listener;
     }
 
     public void setTodoList(ArrayList<Todo> todoList) {
@@ -36,6 +43,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView title, description, meta;
         LinearLayout layoutIcons;
+        LinearLayout contentLayout;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -43,6 +51,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
             description = itemView.findViewById(R.id.textDescription);
             meta = itemView.findViewById(R.id.textMeta);
             layoutIcons = itemView.findViewById(R.id.layoutIcons);
+            contentLayout = itemView.findViewById(R.id.todoContentLayout);
         }
     }
 
@@ -78,6 +87,24 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
                 holder.layoutIcons.addView(imageView);
             }
         }
+
+        // Visuelles Feedback für erledigte ToDos
+        // Wir setzen die Alpha auf das INNERE Layout (contentLayout), NICHT auf das itemView.
+        // Das itemView wird vom ItemTouchHelper (Swipe) kontrolliert und beim Abbrechen auf 1.0 gesetzt.
+        // Unser inneres Layout bleibt davon unberührt.
+        if (todo.isCompleted()) {
+            holder.title.setPaintFlags(holder.title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            holder.contentLayout.setAlpha(0.5f);
+        } else {
+            holder.title.setPaintFlags(holder.title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            holder.contentLayout.setAlpha(1.0f);
+        }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onTodoClick(todo);
+            }
+        });
     }
 
     @Override
