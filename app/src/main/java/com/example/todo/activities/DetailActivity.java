@@ -1,6 +1,9 @@
 package com.example.todo.activities;
 
 import android.app.DatePickerDialog;
+import android.media.MediaPlayer;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -94,7 +97,6 @@ public class DetailActivity extends AppCompatActivity {
             editDueDate.setText(editingTodo.getDueDate());
             switchCompleted.setChecked(editingTodo.isCompleted());
             
-            // Finde den Namen der Priorität anhand der ID
             Priority p = db.priorityDao().getAllPriorities().stream()
                     .filter(priority -> priority.getId() == editingTodo.getPriorityId())
                     .findFirst().orElse(null);
@@ -128,6 +130,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private void initializeVariables(){
         toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         toolbar.setTitle(R.string.details_name);
 
         editTitle = findViewById(R.id.editTitle);
@@ -225,6 +228,19 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
+    private void playJingle() {
+        try {
+            Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            MediaPlayer mp = MediaPlayer.create(this, notification);
+            if (mp != null) {
+                mp.setOnCompletionListener(MediaPlayer::release);
+                mp.start();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private View.OnClickListener saveTodoListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -239,7 +255,6 @@ public class DetailActivity extends AppCompatActivity {
                 return;
             }
 
-            // Finde die ID der gewählten Priorität
             Priority p = availablePriorities.stream()
                     .filter(priority -> priority.getName().equals(selectedPriorityName))
                     .findFirst().orElse(null);
@@ -252,7 +267,15 @@ public class DetailActivity extends AppCompatActivity {
                 for (Category category : selectedCategories) {
                     db.todoDao().insertTodoCategoryJoin(new TodoCategoryJoin((int) todoId, category.getId()));
                 }
+                if (isCompleted) {
+                    playJingle();
+                }
             } else {
+                // Jingle nur abspielen, wenn es von NICHT erledigt zu ERLEDIGT wechselt
+                if (!editingTodo.isCompleted() && isCompleted) {
+                    playJingle();
+                }
+
                 editingTodo.setTitle(title);
                 editingTodo.setDescription(description);
                 editingTodo.setPriorityId(p.getId());

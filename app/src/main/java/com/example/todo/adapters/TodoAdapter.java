@@ -1,6 +1,8 @@
 package com.example.todo.adapters;
 
+import android.content.SharedPreferences;
 import android.graphics.Paint;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.todo.R;
@@ -67,6 +70,9 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Todo todo = todoList.get(position);
 
+        // Schriftgröße anwenden
+        applyFontSize(holder);
+
         holder.title.setText(todo.getTitle());
         holder.description.setText(todo.getDescription());
         
@@ -102,6 +108,16 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
                 listener.onTodoClick(todo);
             }
         });
+    }
+
+    private void applyFontSize(ViewHolder holder) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(holder.itemView.getContext());
+        String fontSizeStr = prefs.getString("font_size", "16");
+        float size = Float.parseFloat(fontSizeStr);
+
+        holder.title.setTextSize(TypedValue.COMPLEX_UNIT_SP, size);
+        holder.description.setTextSize(TypedValue.COMPLEX_UNIT_SP, size - 2);
+        holder.meta.setTextSize(TypedValue.COMPLEX_UNIT_SP, size - 4);
     }
 
     @Override

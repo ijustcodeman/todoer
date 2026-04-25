@@ -29,7 +29,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -134,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
             boolean empty2 = dateStr2 == null || dateStr2.isEmpty();
             
             if (empty1 && empty2) return 0;
-            if (empty1) return 1; // Leere Daten nach hinten
+            if (empty1) return 1;
             if (empty2) return -1;
             
             Date d1 = sdf.parse(dateStr1);
