@@ -27,6 +27,9 @@ public interface TodoDao {
     @Query("SELECT * FROM todos")
     List<Todo> getAllTodos();
 
+    @Query("SELECT * FROM todos WHERE id = :id")
+    Todo getTodoById(int id);
+
     @Insert
     void insertTodoCategoryJoin(TodoCategoryJoin join);
 

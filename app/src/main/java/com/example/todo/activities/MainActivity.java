@@ -38,11 +38,8 @@ import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTodoClickListener {
 
-    MaterialToolbar toolbar;
-    FloatingActionButton fabAddTodo;
-
+    private MaterialToolbar toolbar;
     private TodoAdapter adapter;
-    RecyclerView recyclerView;
     private AppDatabase db;
     
     private enum SortCriteria { 
@@ -51,6 +48,12 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         STATUS_DONE_FIRST, STATUS_OPEN_FIRST 
     }
     private SortCriteria currentSort = SortCriteria.DATE_ASC;
+
+    private final ActivityResultLauncher<Intent> detailActivityLauncher =
+            registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> { /* UI refresh in onResume */ }
+            );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,35 +152,27 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         setSupportActionBar(toolbar);
         toolbar.setTitle(R.string.app_name);
 
-        fabAddTodo = findViewById(R.id.fabAddTodo);
+        FloatingActionButton fabAddTodo = findViewById(R.id.fabAddTodo);
         fabAddTodo.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-            addTodoLauncher.launch(intent);
+            detailActivityLauncher.launch(intent);
         });
 
         adapter = new TodoAdapter(new ArrayList<>(), this);
 
-        recyclerView = findViewById(R.id.recyclerViewTodos);
+        RecyclerView recyclerView = findViewById(R.id.recyclerViewTodos);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
-        enableSwipeToDelete();
+        enableSwipeToDelete(recyclerView);
     }
 
     @Override
     public void onTodoClick(Todo todo) {
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra("todo_id", todo.getId());
-        addTodoLauncher.launch(intent);
+        detailActivityLauncher.launch(intent);
     }
-
-    private ActivityResultLauncher<Intent> addTodoLauncher =
-            registerForActivityResult(
-                    new ActivityResultContracts.StartActivityForResult(),
-                    result -> {
-                        // Refresh in onResume
-                    }
-            );
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -212,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         return true;
     }
 
-    private void enableSwipeToDelete() {
+    private void enableSwipeToDelete(RecyclerView recyclerView) {
         ItemTouchHelper.SimpleCallback swipeCallback =
                 new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
                     @Override
@@ -225,9 +220,7 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
                     @Override
                     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                         int position = viewHolder.getBindingAdapterPosition();
-                        if (position == RecyclerView.NO_POSITION) {
-                            return;
-                        }
+                        if (position == RecyclerView.NO_POSITION) return;
                         
                         Todo todoToDelete = adapter.getTodoAt(position);
                         
@@ -238,12 +231,8 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
                                     db.todoDao().delete(todoToDelete);
                                     loadTodos();
                                 })
-                                .setNegativeButton("Nein", (dialog, which) -> {
-                                    adapter.notifyItemChanged(position);
-                                })
-                                .setOnCancelListener(dialog -> {
-                                    adapter.notifyItemChanged(position);
-                                })
+                                .setNegativeButton("Nein", (dialog, which) -> adapter.notifyItemChanged(position))
+                                .setOnCancelListener(dialog -> adapter.notifyItemChanged(position))
                                 .show();
                     }
                 };

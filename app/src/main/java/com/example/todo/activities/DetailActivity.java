@@ -5,7 +5,6 @@ import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -37,17 +36,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DetailActivity extends AppCompatActivity {
-    MaterialToolbar toolbar;
-    TextInputEditText editTitle;
-    TextInputEditText editDescription;
-    TextInputEditText editDueDate;
-    AutoCompleteTextView spinnerPriority;
-    SwitchMaterial switchCompleted;
-    ChipGroup chipGroupCategories;
-    Button buttonAddCategory;
-
-    Button save;
-    Button cancel;
+    private MaterialToolbar toolbar;
+    private TextInputEditText editTitle;
+    private TextInputEditText editDescription;
+    private TextInputEditText editDueDate;
+    private AutoCompleteTextView spinnerPriority;
+    private SwitchMaterial switchCompleted;
+    private ChipGroup chipGroupCategories;
 
     private List<Priority> availablePriorities = new ArrayList<>();
     private List<Category> selectedCategories = new ArrayList<>();
@@ -75,7 +70,7 @@ public class DetailActivity extends AppCompatActivity {
 
         ensureInitialData();
         loadDataFromDb();
-        initializeVariables();
+        initializeUI();
         
         if (editingTodoId != -1) {
             loadExistingTodo();
@@ -83,13 +78,7 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void loadExistingTodo() {
-        List<Todo> allTodos = db.todoDao().getAllTodos();
-        for (Todo t : allTodos) {
-            if (t.getId() == editingTodoId) {
-                editingTodo = t;
-                break;
-            }
-        }
+        editingTodo = db.todoDao().getTodoById(editingTodoId);
         
         if (editingTodo != null) {
             editTitle.setText(editingTodo.getTitle());
@@ -97,7 +86,7 @@ public class DetailActivity extends AppCompatActivity {
             editDueDate.setText(editingTodo.getDueDate());
             switchCompleted.setChecked(editingTodo.isCompleted());
             
-            Priority p = db.priorityDao().getAllPriorities().stream()
+            Priority p = availablePriorities.stream()
                     .filter(priority -> priority.getId() == editingTodo.getPriorityId())
                     .findFirst().orElse(null);
             if (p != null) {
@@ -128,7 +117,7 @@ public class DetailActivity extends AppCompatActivity {
         allAvailableCategories = db.categoryDao().getAllCategories();
     }
 
-    private void initializeVariables(){
+    private void initializeUI(){
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitle(R.string.details_name);
@@ -139,13 +128,13 @@ public class DetailActivity extends AppCompatActivity {
         spinnerPriority = findViewById(R.id.spinnerPriority);
         switchCompleted = findViewById(R.id.switchCompleted);
         chipGroupCategories = findViewById(R.id.chipGroupCategories);
-        buttonAddCategory = findViewById(R.id.buttonAddCategory);
+        Button buttonAddCategory = findViewById(R.id.buttonAddCategory);
 
         editDueDate.setOnClickListener(v -> showDatePicker());
         buttonAddCategory.setOnClickListener(v -> showCategorySelectionDialog());
 
-        save = findViewById(R.id.buttonSave);
-        cancel = findViewById(R.id.buttonCancel);
+        Button save = findViewById(R.id.buttonSave);
+        Button cancel = findViewById(R.id.buttonCancel);
 
         List<String> priorityNames = availablePriorities.stream()
                 .map(Priority::getName)
@@ -159,8 +148,8 @@ public class DetailActivity extends AppCompatActivity {
 
         spinnerPriority.setAdapter(adapter);
 
-        save.setOnClickListener(saveTodoListener);
-        cancel.setOnClickListener(cancelListener);
+        save.setOnClickListener(v -> saveTodo());
+        cancel.setOnClickListener(v -> finish());
     }
 
     private void showDatePicker() {
@@ -169,12 +158,11 @@ public class DetailActivity extends AppCompatActivity {
         int month = c.get(Calendar.MONTH);
         int day = c.get(Calendar.DAY_OF_MONTH);
 
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
-                (view, year1, monthOfYear, dayOfMonth) -> {
-                    String date = dayOfMonth + "." + (monthOfYear + 1) + "." + year1;
+        new DatePickerDialog(this,
+                (view, y, m, d) -> {
+                    String date = d + "." + (m + 1) + "." + y;
                     editDueDate.setText(date);
-                }, year, month, day);
-        datePickerDialog.show();
+                }, year, month, day).show();
     }
 
     private void showCategorySelectionDialog() {
@@ -201,7 +189,7 @@ public class DetailActivity extends AppCompatActivity {
                 .setMultiChoiceItems(categoryNames, checkedItems, (dialog, which, isChecked) -> {
                     Category category = allAvailableCategories.get(which);
                     if (isChecked) {
-                        if (!selectedCategories.stream().anyMatch(c -> c.getId() == category.getId())) {
+                        if (selectedCategories.stream().noneMatch(c -> c.getId() == category.getId())) {
                             selectedCategories.add(category);
                         }
                     } else {
@@ -241,57 +229,46 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
-    private View.OnClickListener saveTodoListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            String title = editTitle.getText() != null ? editTitle.getText().toString() : "";
-            String description = editDescription.getText() != null ? editDescription.getText().toString() : "";
-            String selectedPriorityName = spinnerPriority.getText() != null ? spinnerPriority.getText().toString() : "";
-            String dueDate = editDueDate.getText() != null ? editDueDate.getText().toString() : "";
-            boolean isCompleted = switchCompleted.isChecked();
+    private void saveTodo() {
+        String title = editTitle.getText() != null ? editTitle.getText().toString().trim() : "";
+        String description = editDescription.getText() != null ? editDescription.getText().toString().trim() : "";
+        String selectedPriorityName = spinnerPriority.getText() != null ? spinnerPriority.getText().toString() : "";
+        String dueDate = editDueDate.getText() != null ? editDueDate.getText().toString() : "";
+        boolean isCompleted = switchCompleted.isChecked();
 
-            if (title.isEmpty() || selectedPriorityName.isEmpty()) {
-                Toast.makeText(DetailActivity.this, "Titel und Priorität sind Pflichtfelder", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            Priority p = availablePriorities.stream()
-                    .filter(priority -> priority.getName().equals(selectedPriorityName))
-                    .findFirst().orElse(null);
-            
-            if (p == null) return;
-
-            if (editingTodoId == -1) {
-                Todo todo = new Todo(title, description, p.getId(), dueDate, isCompleted);
-                long todoId = db.todoDao().insert(todo);
-                for (Category category : selectedCategories) {
-                    db.todoDao().insertTodoCategoryJoin(new TodoCategoryJoin((int) todoId, category.getId()));
-                }
-                if (isCompleted) {
-                    playJingle();
-                }
-            } else {
-                // Jingle nur abspielen, wenn es von NICHT erledigt zu ERLEDIGT wechselt
-                if (!editingTodo.isCompleted() && isCompleted) {
-                    playJingle();
-                }
-
-                editingTodo.setTitle(title);
-                editingTodo.setDescription(description);
-                editingTodo.setPriorityId(p.getId());
-                editingTodo.setDueDate(dueDate);
-                editingTodo.setCompleted(isCompleted);
-                db.todoDao().update(editingTodo);
-                
-                db.todoDao().deleteCategoriesForTodo(editingTodoId);
-                for (Category category : selectedCategories) {
-                    db.todoDao().insertTodoCategoryJoin(new TodoCategoryJoin(editingTodoId, category.getId()));
-                }
-            }
-
-            finish();
+        if (title.isEmpty() || selectedPriorityName.isEmpty()) {
+            Toast.makeText(this, "Titel und Priorität sind Pflichtfelder", Toast.LENGTH_SHORT).show();
+            return;
         }
-    };
 
-    private View.OnClickListener cancelListener = v -> finish();
+        Priority p = availablePriorities.stream()
+                .filter(priority -> priority.getName().equals(selectedPriorityName))
+                .findFirst().orElse(null);
+        
+        if (p == null) return;
+
+        if (editingTodoId == -1) {
+            Todo todo = new Todo(title, description, p.getId(), dueDate, isCompleted);
+            long todoId = db.todoDao().insert(todo);
+            for (Category category : selectedCategories) {
+                db.todoDao().insertTodoCategoryJoin(new TodoCategoryJoin((int) todoId, category.getId()));
+            }
+            if (isCompleted) playJingle();
+        } else {
+            if (!editingTodo.isCompleted() && isCompleted) playJingle();
+
+            editingTodo.setTitle(title);
+            editingTodo.setDescription(description);
+            editingTodo.setPriorityId(p.getId());
+            editingTodo.setDueDate(dueDate);
+            editingTodo.setCompleted(isCompleted);
+            db.todoDao().update(editingTodo);
+            
+            db.todoDao().deleteCategoriesForTodo(editingTodoId);
+            for (Category category : selectedCategories) {
+                db.todoDao().insertTodoCategoryJoin(new TodoCategoryJoin(editingTodoId, category.getId()));
+            }
+        }
+        finish();
+    }
 }

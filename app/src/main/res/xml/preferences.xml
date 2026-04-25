@@ -10,9 +10,15 @@
         android:defaultValue="16"/>
 
     <Preference
+        android:layout="@layout/item_divider" />
+
+    <Preference
         android:key="manage_categories"
         android:title="Kategorien verwalten"
         android:summary="Kategorien erstellen, bearbeiten oder löschen"/>
+
+    <Preference
+        android:layout="@layout/item_divider" />
 
     <Preference
         android:key="manage_priorities"
