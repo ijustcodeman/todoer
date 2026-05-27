@@ -20,10 +20,17 @@ import com.example.todo.models.Priority;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Fragment that displays and manages application settings, including categories and priorities.
+ */
 public class SettingsFragment extends PreferenceFragmentCompat {
 
     private AppDatabase db;
 
+    /**
+     * Called during onCreate to supply the preferences for this fragment.
+     * Initializes the preference screen and sets up click listeners for managing categories and priorities.
+     */
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preferences, rootKey);
@@ -46,6 +53,9 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         }
     }
 
+    /**
+     * Displays a dialog listing all categories and allows the user to select one for editing or create a new one.
+     */
     private void showManageCategoriesDialog() {
         List<Category> categories = db.categoryDao().getAllCategories();
         String[] names = categories.stream().map(Category::getName).toArray(String[]::new);
@@ -58,6 +68,9 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 .show();
     }
 
+    /**
+     * Displays a dialog to create a new category or edit an existing one, including name and icon selection.
+     */
     private void showEditCategoryDialog(Category category) {
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_category, null);
         EditText editName = view.findViewById(R.id.editCategoryName);
@@ -117,6 +130,9 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         builder.setNegativeButton("Abbrechen", null).show();
     }
 
+    /**
+     * Displays a dialog listing all priorities sorted by rank and allows for editing or creating a new one.
+     */
     private void showManagePrioritiesDialog() {
         List<Priority> priorities = db.priorityDao().getAllPriorities();
         priorities.sort(Comparator.comparingInt(Priority::getRank).reversed());
@@ -130,6 +146,9 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 .show();
     }
 
+    /**
+     * Displays a dialog to create a new priority or edit an existing one, including name and rank.
+     */
     private void showEditPriorityDialog(Priority priority) {
         View layout = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_priority, null);
         EditText editName = layout.findViewById(R.id.editPriorityName);
@@ -161,7 +180,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         if (priority != null) {
             builder.setNeutralButton("Löschen", (dialog, which) -> {
-                // PRÜFUNG: Wird diese Priorität noch von ToDos verwendet?
+                // Check if this priority is still used by any Todos
                 int count = db.todoDao().getTodoCountByPriority(priority.getId());
                 if (count > 0) {
                     Toast.makeText(requireContext(), 

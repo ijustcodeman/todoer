@@ -13,8 +13,14 @@ import com.example.todo.R;
 import com.example.todo.fragments.SettingsFragment;
 import com.google.android.material.appbar.MaterialToolbar;
 
+/**
+ * Activity that hosts the SettingsFragment to allow users to modify application preferences.
+ */
 public class SettingsActivity extends AppCompatActivity {
 
+    /**
+     * Called when the activity is first created. Sets up the UI, toolbar, and loads the SettingsFragment.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +47,10 @@ public class SettingsActivity extends AppCompatActivity {
                 .commit();
     }
 
+    /**
+     * Called when the user chooses to navigate up within the application's activity hierarchy from the action bar.
+     * @return true if Up navigation completed successfully and this Activity was finished, false otherwise.
+     */
     @Override
     public boolean onSupportNavigateUp() {
         getOnBackPressedDispatcher().onBackPressed();

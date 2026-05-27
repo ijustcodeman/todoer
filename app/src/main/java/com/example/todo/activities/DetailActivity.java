@@ -35,6 +35,9 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Activity for creating and editing Todo items.
+ */
 public class DetailActivity extends AppCompatActivity {
     private MaterialToolbar toolbar;
     private TextInputEditText editTitle;
@@ -52,6 +55,10 @@ public class DetailActivity extends AppCompatActivity {
     private int editingTodoId = -1;
     private Todo editingTodo;
 
+    /**
+     * Called when the activity is first created. Initializes the UI, database connection,
+     * and handles window insets for edge-to-edge display.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +84,10 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Loads an existing Todo from the database and populates the UI fields
+     * if the activity is in editing mode.
+     */
     private void loadExistingTodo() {
         editingTodo = db.todoDao().getTodoById(editingTodoId);
         
@@ -99,6 +110,10 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Checks if priorities and categories exist in the database and inserts 
+     * default values if they are missing.
+     */
     private void ensureInitialData() {
         if (db.priorityDao().getAllPriorities().isEmpty()) {
             db.priorityDao().insert(new Priority("niedrig", 1));
@@ -112,11 +127,18 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Fetches all available priorities and categories from the database.
+     */
     private void loadDataFromDb() {
         availablePriorities = db.priorityDao().getAllPriorities();
         allAvailableCategories = db.categoryDao().getAllCategories();
     }
 
+    /**
+     * Sets up UI components, adapters for the priority spinner, and assigns
+     * click listeners to buttons and input fields.
+     */
     private void initializeUI(){
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -152,6 +174,9 @@ public class DetailActivity extends AppCompatActivity {
         cancel.setOnClickListener(v -> finish());
     }
 
+    /**
+     * Displays a DatePickerDialog and updates the due date field with the selected date.
+     */
     private void showDatePicker() {
         final Calendar c = Calendar.getInstance();
         int year = c.get(Calendar.YEAR);
@@ -165,6 +190,9 @@ public class DetailActivity extends AppCompatActivity {
                 }, year, month, day).show();
     }
 
+    /**
+     * Opens a dialog that allows the user to select multiple categories for the Todo item.
+     */
     private void showCategorySelectionDialog() {
         if (allAvailableCategories.isEmpty()) {
             Toast.makeText(this, "Keine Kategorien vorhanden", Toast.LENGTH_SHORT).show();
@@ -201,6 +229,9 @@ public class DetailActivity extends AppCompatActivity {
                 .show();
     }
 
+    /**
+     * Refreshes the category ChipGroup by adding a chip for each selected category.
+     */
     private void updateCategoryChips() {
         chipGroupCategories.removeAllViews();
         for (Category category : selectedCategories) {
@@ -216,6 +247,9 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Plays a notification sound to celebrate completion or save events.
+     */
     private void playJingle() {
         try {
             Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -229,6 +263,10 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Validates input fields and saves the Todo item to the database. 
+     * Handles both creating a new entry and updating an existing one.
+     */
     private void saveTodo() {
         String title = editTitle.getText() != null ? editTitle.getText().toString().trim() : "";
         String description = editDescription.getText() != null ? editDescription.getText().toString().trim() : "";

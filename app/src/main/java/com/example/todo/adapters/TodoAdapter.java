@@ -20,34 +20,58 @@ import com.example.todo.models.Todo;
 
 import java.util.ArrayList;
 
+/**
+ * Adapter for the RecyclerView in MainActivity that displays a list of Todo items.
+ */
 public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
 
     private ArrayList<Todo> todoList;
     private OnTodoClickListener listener;
 
+    /**
+     * Interface for handling click events on individual Todo items in the list.
+     */
     public interface OnTodoClickListener {
+        /**
+         * Called when a Todo item is clicked.
+         */
         void onTodoClick(Todo todo);
     }
 
+    /**
+     * Constructs a new TodoAdapter.
+     */
     public TodoAdapter(ArrayList<Todo> todoList, OnTodoClickListener listener) {
         this.todoList = todoList;
         this.listener = listener;
     }
 
+    /**
+     * Updates the data set and refreshes the RecyclerView.
+     */
     public void setTodoList(ArrayList<Todo> todoList) {
         this.todoList = todoList;
         notifyDataSetChanged();
     }
 
+    /**
+     * Retrieves the Todo item at the specified position.
+     */
     public Todo getTodoAt(int position) {
         return todoList.get(position);
     }
 
+    /**
+     * ViewHolder class that holds references to the UI components of a single list item.
+     */
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView title, description, meta;
         LinearLayout layoutIcons;
         LinearLayout contentLayout;
 
+        /**
+         * Constructs a ViewHolder and initializes its views.
+         */
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.textTitle);
@@ -58,6 +82,9 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
         }
     }
 
+    /**
+     * Creates a new ViewHolder by inflating the item layout.
+     */
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -66,11 +93,16 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
         return new ViewHolder(view);
     }
 
+    /**
+     * Binds the data of a Todo item to the views in the ViewHolder.
+     * @param holder The ViewHolder to bind data to.
+     * @param position The position of the item in the data set.
+     */
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Todo todo = todoList.get(position);
 
-        // Schriftgröße anwenden
+        // Apply font size based on user preferences
         applyFontSize(holder);
 
         holder.title.setText(todo.getTitle());
@@ -94,7 +126,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
             }
         }
 
-        // Visuelles Feedback für erledigte ToDos
+        // Apply visual feedback for completed tasks
         if (todo.isCompleted()) {
             holder.title.setPaintFlags(holder.title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             holder.contentLayout.setAlpha(0.5f);
@@ -110,6 +142,9 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
         });
     }
 
+    /**
+     * Applies the font size from shared preferences to the TextViews in the ViewHolder.
+     */
     private void applyFontSize(ViewHolder holder) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(holder.itemView.getContext());
         String fontSizeStr = prefs.getString("font_size", "16");
@@ -120,16 +155,25 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
         holder.meta.setTextSize(TypedValue.COMPLEX_UNIT_SP, size - 4);
     }
 
+    /**
+     * Returns the total number of items in the data set held by the adapter.
+     */
     @Override
     public int getItemCount() {
         return todoList.size();
     }
 
+    /**
+     * Adds a new Todo item to the list and notifies the adapter.
+     */
     public void addTodo(Todo todo) {
         todoList.add(todo);
         notifyItemInserted(todoList.size() - 1);
     }
 
+    /**
+     * Removes a Todo item from the list at the specified position and notifies the adapter.
+     */
     public void removeTodo(int position){
         todoList.remove(position);
         notifyItemRemoved(position);

@@ -36,6 +36,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Main activity that displays the list of Todo items and provides sorting and management options.
+ */
 public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTodoClickListener {
 
     private MaterialToolbar toolbar;
@@ -55,6 +58,9 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
                     result -> { /* UI refresh in onResume */ }
             );
 
+    /**
+     * Called when the activity is starting. Sets up the UI layout, window insets, and database instance.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,12 +78,19 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         initializeVariables();
     }
 
+    /**
+     * Called after onCreate(Bundle) — or after onRestart() when the activity had been stopped.
+     * Refreshes the Todo list from the database.
+     */
     @Override
     protected void onResume() {
         super.onResume();
         loadTodos();
     }
 
+    /**
+     * Fetches todos and their associated priorities and categories from the database, then updates the UI.
+     */
     private void loadTodos() {
         List<Todo> todos = db.todoDao().getAllTodos();
         List<Priority> priorities = db.priorityDao().getAllPriorities();
@@ -100,6 +113,9 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         sortAndDisplay(todos);
     }
     
+    /**
+     * Sorts the list of Todos according to the current sort criteria and updates the adapter.
+     */
     private void sortAndDisplay(List<Todo> todos) {
         Comparator<Todo> comparator;
         
@@ -129,6 +145,9 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         adapter.setTodoList(new ArrayList<>(todos));
     }
 
+    /**
+     * Compares two date strings in "d.M.yyyy" format.
+     */
     private int compareDates(String dateStr1, String dateStr2) {
         SimpleDateFormat sdf = new SimpleDateFormat("d.M.yyyy", Locale.getDefault());
         try {
@@ -147,6 +166,9 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         }
     }
 
+    /**
+     * Initializes the UI components, toolbar, floating action button, and RecyclerView adapter.
+     */
     private void initializeVariables(){
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -167,6 +189,9 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         enableSwipeToDelete(recyclerView);
     }
 
+    /**
+     * Handles the click event on a Todo item by launching the DetailActivity for editing.
+     */
     @Override
     public void onTodoClick(Todo todo) {
         Intent intent = new Intent(this, DetailActivity.class);
@@ -174,12 +199,18 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         detailActivityLauncher.launch(intent);
     }
 
+    /**
+     * Initialize the contents of the Activity's standard options menu.
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return true;
     }
 
+    /**
+     * This hook is called whenever an item in your options menu is selected.
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -207,6 +238,9 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         return true;
     }
 
+    /**
+     * Attaches an ItemTouchHelper to the RecyclerView to enable swipe-to-delete functionality.
+     */
     private void enableSwipeToDelete(RecyclerView recyclerView) {
         ItemTouchHelper.SimpleCallback swipeCallback =
                 new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
